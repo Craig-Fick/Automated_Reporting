@@ -18,8 +18,10 @@ Attached to the repository:
 
 
 Old weekly report:
+
 ![](https://github.com/Craig-Fick/Automated_Reporting/blob/main/old%20report.PNG)
 
 
 New automated report:
+
 ![](https://github.com/Craig-Fick/Automated_Reporting/blob/main/new%20report.PNG)
