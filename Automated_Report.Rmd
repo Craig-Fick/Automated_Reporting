@@ -1,0 +1,178 @@
+---
+title: "Automated Reports"
+author: "Craig Fick"
+date: "3/5/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+Create example data metrics
+```{r}
+# row id
+id = 1:7
+
+# dates column - ymd
+dates_col <- as.Date("2018/03/01")
+seq = 7
+dates = seq(dates_col, by = "day", length.out = seq)
+
+# create census for week
+census <- sample.int(20,7)
+
+# create discharge
+discharge <- sample.int(15,7)
+
+# create average response
+response <- sample.int(50,7)
+
+# safety days
+previous = 179
+safety = seq(previous, length.out = seq)
+
+# quality surveys
+pi = sample.int(15,7)
+pa = sample.int(10,7)
+pr = sample.int(7,7)
+
+# add all columns to data frame
+df <- as.data.frame(id)
+df$dates <- dates
+df$census <- census
+df$discharge <- discharge
+df$response <- response
+df$safety <- safety
+df$pi <- pi
+df$pa <- pa
+df$pr <- pr
+
+df
+```
+
+
+Automated report doc
+```{r}
+library(officer)
+library(dplyr)
+library(png)
+
+#read file
+img <- readPNG("C:/Users/CSFic/Desktop/logo.png")
+
+# numbers to report
+cen_avg <- as.integer(mean(df$census))
+cen_min <- min(df$census)
+cen_max <- max(df$census)
+
+dis_avg <- as.integer(mean(df$discharge))
+dis_min <- min(df$discharge)
+dis_max <- max(df$discharge)
+
+res_avg <- as.integer(mean(df$response))
+res_min <- min(df$response)
+res_max <- max(df$response)
+
+safety_max <- max(df$safety)
+
+quality_tot <- sum(df$pi) + sum(df$pa) + sum(df$pr)
+
+# create empty Word file
+sample_doc <- read_docx()
+
+# add image
+logo <- readPNG("C:/Users/CSFic/Desktop/logo.png")
+img.file <- file.path( R.home("sample_doc"), "C:/Users/CSFic/Desktop/logo.png", "name.png" )
+sample_doc <- body_add_img(x = sample_doc, src = "C:/Users/CSFic/Desktop/logo.png", height = 0.8, width = 1.2, style = "centered")
+
+# add content
+sample_doc <- sample_doc %>% body_add_par("Weekly Report ", style = "centered") 
+sample_doc <- sample_doc %>% body_add_par(" ")
+sample_doc <- sample_doc %>% body_add_par("Average Daily Census:")
+sample_doc <- sample_doc %>% body_add_par(cen_avg, style = NULL, pos = "after")
+sample_doc <- sample_doc %>% body_add_par("Average Daily Discharges: ")
+sample_doc <- sample_doc %>% body_add_par(dis_avg, style = NULL, pos = "after")
+sample_doc <- sample_doc %>% body_add_par("Average Response Time:")
+sample_doc <- sample_doc %>% body_add_par(res_avg, style = NULL, pos = "after")
+sample_doc <- sample_doc %>% body_add_par("Safety Days:")
+sample_doc <- sample_doc %>% body_add_par(safety_max, style = NULL, pos = "after")
+sample_doc <- sample_doc %>% body_add_par("Number of Quality Surveys:")
+sample_doc <- sample_doc %>% body_add_par(quality_tot, style = NULL, pos = "after")
+sample_doc <- sample_doc %>% body_add_par(" ")
+sample_doc <- sample_doc %>% body_add_par("Data Table", style = "centered")
+
+
+# add table containing the data frame's contents
+sample_doc <- sample_doc %>% body_add_table(df, style = "table_template")
+
+# create a temp file
+src <- tempfile(fileext = ".png")
+ 
+# create PNG object
+png(filename = src, width = 4, height = 4, units = 'in', res = 400)
+
+sample_doc <- sample_doc %>% body_add_par(" ")
+sample_doc <- sample_doc %>% body_add_par("Visuals", style = "centered")
+
+# create plot
+par(mfrow=c(2,2))
+plot(df$dates,df$census, type = "line", col = "Red", main = "Census", xlab = "Dates", ylab = "# of Patients")
+plot(df$dates, df$discharge, type = "line", col = "Blue", main = "Discharges", xlab = "Dates", ylab = "# of Discharges")
+plot(df$dates, df$response, type = "line", col = "Green", main = "Response Time", xlab = "Dates", ylab = "Response Time (MIN)")
+plot(df$dates, df$pi+df$pa+df$pr, type = "line", col = "Orange", main = "Quality Surveys", xlab = "Dates", ylab = "# of Surveys")
+
+# save PNG file
+dev.off()
+ 
+# add PNG image to Word document
+sample_doc <- sample_doc %>% body_add_img(src = src, width = 4, height = 4, style = "centered")
+
+print(sample_doc, target = "sample_file.docx")
+```
+
+Mail the report
+```{r}
+library(mailR)
+
+from <- "you@account.com"
+to <- "recipient@account.com"
+subject <- "Email Subject"
+body <- "Email body."                     
+mailControl=list(smtpServer="serverinfo")
+
+#####send same email with attachment
+
+#needs full path if not in working directory
+attachmentPath <- "sample_file.docx"
+
+#same as attachment Path if using working directory
+attachmentName <- "sample_file.docx"
+
+#key part for attachments, put the body and the mime_part in a list for msg
+attachmentObject <- mime_part(x=attachmentPath,name=attachmentName)
+bodyWithAttachment <- list(body,attachmentObject)
+
+sendmail(from=from,to=to,subject=subject,msg=bodyWithAttachment,control=mailControl)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
