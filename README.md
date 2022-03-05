@@ -16,3 +16,6 @@ Attached to the repository:
    - Example of the new automated report.
    - The code used to create the automated report.
 
+![Example of old report.](https://github.com/Craig-Fick/Automated_Reporting/blob/main/old%20report.PNG)
+
+![Example of new automated report.](https://github.com/Craig-Fick/Automated_Reporting/blob/main/new%20report.PNG)
